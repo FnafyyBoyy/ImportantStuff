@@ -1,46 +1,43 @@
-package de.fnafhc.verdantiacharpl.utils;
-
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
+import java.io.InputStreamReader;
 import java.util.logging.Level;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class ConfigManager {
-    private final JavaPlugin plugin;
-    private File configFile;
-    private FileConfiguration config;
 
-    public ConfigManager(JavaPlugin plugin) {
+    private final JavaPlugin plugin;
+    private final String fileName;
+    private FileConfiguration config = null;
+    private File configFile = null;
+
+    public ConfigManager(JavaPlugin plugin, String fileName) {
         this.plugin = plugin;
-        setupConfig();
+        this.fileName = fileName;
+        saveDefaultConfig();
     }
 
-    public void setupConfig() {
-        if (!plugin.getDataFolder().exists()) {
-            plugin.getDataFolder().mkdir();
+    public void reloadConfig() {
+        if (configFile == null) {
+            configFile = new File(plugin.getDataFolder(), fileName);
         }
-
-        configFile = new File(plugin.getDataFolder(), "config.yml");
-
-        if (!configFile.exists()) {
-            try (InputStream inputStream = plugin.getResource("config.yml")) {
-                Files.copy(inputStream, configFile.toPath());
-            } catch (IOException e) {
-                plugin.getLogger().log(Level.SEVERE, "Unable to create configuration file", e);
-            }
-        }
-
         config = YamlConfiguration.loadConfiguration(configFile);
+
+        // Look for defaults in the jar
+        InputStream defConfigStream = plugin.getResource(fileName);
+        if (defConfigStream != null) {
+            YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defConfigStream));
+            config.setDefaults(defConfig);
+        }
     }
 
     public FileConfiguration getConfig() {
         if (config == null) {
-            setupConfig();
+            reloadConfig();
         }
         return config;
     }
@@ -52,14 +49,16 @@ public class ConfigManager {
         try {
             getConfig().save(configFile);
         } catch (IOException ex) {
-            plugin.getLogger().log(Level.SEVERE, "Could not save config to " + configFile.getName(), ex);
+            plugin.getLogger().log(Level.SEVERE, "Could not save config to " + configFile, ex);
         }
     }
 
-    public void reloadConfig() {
+    public void saveDefaultConfig() {
         if (configFile == null) {
-            configFile = new File(plugin.getDataFolder(), "config.yml");
+            configFile = new File(plugin.getDataFolder(), fileName);
         }
-        config = YamlConfiguration.loadConfiguration(configFile);
+        if (!configFile.exists()) {
+            plugin.saveResource(fileName, false);
+        }
     }
 }
