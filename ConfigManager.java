@@ -27,7 +27,6 @@ public class ConfigManager {
         }
         config = YamlConfiguration.loadConfiguration(configFile);
 
-        // Look for defaults in the jar
         InputStream defConfigStream = plugin.getResource(fileName);
         if (defConfigStream != null) {
             YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defConfigStream));
