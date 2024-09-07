@@ -1,6 +1,5 @@
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import com.mysql.cj.jdbc.MysqlDataSource;
-import de.fnafhc.vdjoin.VDJoin;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
